@@ -73,7 +73,7 @@ def main():
     user, token = sys.argv[1], os.environ["DISCOGS_TOKEN"]
     os.makedirs(CACHE, exist_ok=True)
     os.makedirs(os.path.join(SITE, "covers"), exist_ok=True)
-    for f in ("index.html", "record.html", "style.css"):
+    for f in ("index.html", "record.html", "tags.html", "style.css"):
         shutil.copy(os.path.join(HERE, "templates", f), os.path.join(SITE, f))
 
     extras_path = os.path.join(HERE, "extras.json")

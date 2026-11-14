@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>NFC tag addresses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Inter+Tight:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head><body>
+<div class="wrap">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">&larr; Collection</a><i aria-hidden="true">&rsaquo;</i><span aria-current="page">NFC tags</span></nav>
+  <div class="top"><div><h1>NFC tag addresses</h1><div class="count" id="progress"></div></div></div>
+  <div class="controls">
+    <input id="q" type="search" placeholder="Search artist or title" aria-label="Search">
+    <select id="show" aria-label="Filter">
+      <option value="all">All records</option><option value="todo">Not written yet</option><option value="done">Written</option>
+    </select>
+  </div>
+  <ul class="taglist" id="list"></ul>
+  <p class="empty" id="empty" hidden>Nothing matches.</p>
+</div>
+<script src="collection.js"></script>
+<script>
+const data = (window.COLLECTION || []).slice().sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title));
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const urlFor = r => new URL("record.html?id=" + r.id, location.href).href;
+// "Written" ticks are kept in this browser only
+let done = {};
+try { done = JSON.parse(localStorage.getItem("tagsWritten") || "{}"); } catch (e) {}
+const save = () => { try { localStorage.setItem("tagsWritten", JSON.stringify(done)); } catch (e) {} };
+
+function render() {
+  const q = $("q").value.trim().toLowerCase(), show = $("show").value;
+  const list = data.filter(r => (!q || (r.artist + " " + r.title).toLowerCase().includes(q)) &&
+    (show === "all" || (show === "done") === !!done[r.id]));
+  $("progress").textContent = data.filter(r => done[r.id]).length + " of " + data.length + " tags written";
+  $("empty").hidden = list.length > 0;
+  $("list").innerHTML = list.map(r => `<li class="tagrow">
+    <div class="thumb">${r.cover ? `<img src="${esc(r.cover)}" alt="" loading="lazy">` : ""}</div>
+    <div class="tagtext"><b>${esc(r.title)}</b><small>${esc(r.artist)}</small><code>${esc(urlFor(r))}</code></div>
+    <label class="tick"><input type="checkbox" data-id="${r.id}" ${done[r.id] ? "checked" : ""}> Written</label>
+    <button class="btn copy" data-id="${r.id}" type="button">Copy</button></li>`).join("");
+}
+$("list").addEventListener("click", async e => {
+  const b = e.target.closest("button.copy"); if (!b) return;
+  const r = data.find(x => String(x.id) === b.dataset.id), text = urlFor(r);
+  try { await navigator.clipboard.writeText(text); b.textContent = "Copied"; }
+  catch (err) { window.prompt("Copy this address:", text); }
+  setTimeout(() => b.textContent = "Copy", 1500);
+});
+$("list").addEventListener("change", e => {
+  const c = e.target.closest("input[type=checkbox]"); if (!c) return;
+  if (c.checked) done[c.dataset.id] = 1; else delete done[c.dataset.id];
+  save();
+  if ($("show").value === "all") $("progress").textContent = data.filter(r => done[r.id]).length + " of " + data.length + " tags written";
+  else render();
+});
+$("q").oninput = render; $("show").onchange = render; render();
+</script>
+</body></html>
