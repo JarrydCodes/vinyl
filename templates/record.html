@@ -33,7 +33,7 @@ if (!r) {
       <div class="links">${links}</div></div>
     <div>
       <h1>${esc(r.title)}</h1><p class="artist">${esc(r.artist)}</p>
-      <dl>${row("Year", r.year)}${row("Label", r.label)}${row("Cat. no.", r.catno)}${row("Format", r.format)}${row("Country", r.country)}${row("Added", (r.added || "").split("-").reverse().join("-"))}${row("Condition", r.condition)}${row("Bought", r.bought)}</dl>
+      <dl>${row("Year", r.year)}${row("Label", r.label)}${row("Cat. no.", r.catno)}${row("Format", r.format)}${row("Colour", r.colour)}${row("Country", r.country)}${row("Added", (r.added || "").split("-").reverse().join("-"))}${row("Condition", r.condition)}${row("Bought", r.bought)}</dl>
       <div class="tags">${[...r.genres, ...(r.styles || [])].map(g => `<span>${esc(g)}</span>`).join("")}</div>
       ${notes}
       ${tracks ? `<h2>Tracklist</h2><ol class="tracks">${tracks}</ol>` : ""}
