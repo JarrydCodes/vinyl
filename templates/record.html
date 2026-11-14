@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Record</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Inter+Tight:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head><body>
+<div class="wrap"><nav class="crumbs" id="crumbs" aria-label="Breadcrumb"><a href="index.html">← Collection</a></nav><main id="main"></main></div>
+<script src="collection.js"></script>
+<script>
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const id = new URLSearchParams(location.search).get("id");
+const r = (window.COLLECTION || []).find(x => String(x.id) === id);
+const main = document.getElementById("main");
+if (!r) {
+  main.innerHTML = '<h1 class="display">Record not found</h1><p class="artist">This record isn\'t in the collection yet. Rebuild the site to add it.</p>';
+} else {
+  document.title = r.title + " by " + r.artist;
+  document.getElementById("crumbs").insertAdjacentHTML("beforeend",
+    `<i aria-hidden="true">›</i><a href="index.html?q=${encodeURIComponent(r.artist)}">${esc(r.artist)}</a><i aria-hidden="true">›</i><span aria-current="page">${esc(r.title)}</span>`);
+  const row = (k, v) => v ? `<dt>${k}</dt><dd>${esc(v)}</dd>` : "";
+  const tracks = (r.tracklist || []).map(t => `<li><span class="p">${esc(t.pos)}</span><span>${esc(t.title)}</span><span class="d">${esc(t.dur)}</span></li>`).join("");
+  const apple = r.apple || "https://music.apple.com/search?term=" + encodeURIComponent(r.artist + " " + r.title);
+  const links = [{label: "Listen on Apple Music", url: apple}, ...(r.links || []), {label: "View on Discogs", url: r.url}].filter(l => l.url)
+    .map((l, i) => `<a class="btn${i === 0 ? " primary" : ""}" href="${esc(l.url)}" rel="noopener">${esc(l.label)}<span aria-hidden="true">↗</span></a>`).join("");
+  const notes = [r.note && {label: "Note", value: r.note}, ...(r.notes || []).map(n => typeof n === "string" ? {label: "Note", value: n} : n)]
+    .filter(Boolean).map(n => `<div class="note"><small>${esc(n.label)}</small>${esc(n.value)}</div>`).join("");
+  main.innerHTML = `<div class="rec">
+    <div class="side"><div class="stage" id="stage"><div class="disc"></div>
+      <div class="sleeve">${r.cover ? `<img src="${esc(r.cover)}" alt="Cover of ${esc(r.title)}">` : `<span>${esc(r.title)}</span>`}</div></div>
+      <div class="links">${links}</div></div>
+    <div>
+      <h1>${esc(r.title)}</h1><p class="artist">${esc(r.artist)}</p>
+      <dl>${row("Year", r.year)}${row("Label", r.label)}${row("Cat. no.", r.catno)}${row("Format", r.format)}${row("Country", r.country)}${row("Added", (r.added || "").split("-").reverse().join("-"))}${row("Condition", r.condition)}${row("Bought", r.bought)}</dl>
+      <div class="tags">${[...r.genres, ...(r.styles || [])].map(g => `<span>${esc(g)}</span>`).join("")}</div>
+      ${notes}
+      ${tracks ? `<h2>Tracklist</h2><ol class="tracks">${tracks}</ol>` : ""}
+    </div></div>`;
+  const stage = document.getElementById("stage");
+  stage.addEventListener("click", () => stage.classList.toggle("out"));
+}
+</script>
+</body></html>

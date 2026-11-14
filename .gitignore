@@ -1,3 +1,5 @@
 cache
 site
 nfc-links.csv
+.DS_Store
+__pycache__

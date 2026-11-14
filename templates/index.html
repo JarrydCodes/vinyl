@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Inter+Tight:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head><body>
+<div class="wrap">
+  <div class="top"><div><h1 id="title">My records</h1><div class="count" id="count"></div></div></div>
+  <div class="controls">
+    <input id="q" type="search" placeholder="Search artist, title, label" aria-label="Search">
+    <select id="sort" aria-label="Sort">
+      <option value="artist">Artist A–Z</option><option value="added">Recently added</option>
+      <option value="year">Year, oldest first</option><option value="yeard">Year, newest first</option>
+      <option value="title">Title A–Z</option>
+    </select>
+  </div>
+  <div class="chips" id="chips"></div>
+  <ul class="grid" id="grid"></ul>
+  <p class="empty" id="empty" hidden>Nothing matches. Try a different search or clear the genre.</p>
+</div>
+<script src="collection.js"></script>
+<script>
+// Change this to rename your page
+const SITE_TITLE = "My records";
+document.getElementById("title").textContent = SITE_TITLE; document.title = SITE_TITLE;
+const data = window.COLLECTION || [];
+const $ = id => document.getElementById(id);
+let genre = "";
+const genres = [...new Set(data.flatMap(r => r.genres))].sort();
+const chips = $("chips");
+function chip(label, value){
+  const b = document.createElement("button"); b.className = "chip"; b.textContent = label;
+  b.setAttribute("aria-pressed", value === genre);
+  b.onclick = () => { genre = value; [...chips.children].forEach(c => c.setAttribute("aria-pressed", c === b)); render(); };
+  chips.appendChild(b);
+}
+chip("All", ""); genres.forEach(g => chip(g, g));
+const sorts = {
+  artist:(a,b)=>a.artist.localeCompare(b.artist)||(a.year||0)-(b.year||0),
+  title:(a,b)=>a.title.localeCompare(b.title),
+  year:(a,b)=>(a.year||9999)-(b.year||9999),
+  yeard:(a,b)=>(b.year||0)-(a.year||0),
+  added:(a,b)=>b.added.localeCompare(a.added)
+};
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function render(){
+  const q = $("q").value.trim().toLowerCase();
+  const list = data.filter(r => (!genre || r.genres.includes(genre)) &&
+    (!q || [r.artist, r.title, r.label, r.catno, ...(r.styles||[])].join(" ").toLowerCase().includes(q)))
+    .sort(sorts[$("sort").value]);
+  $("count").textContent = list.length === data.length ? data.length + " records" : list.length + " of " + data.length + " records";
+  $("empty").hidden = list.length > 0;
+  $("grid").innerHTML = list.map(r => `<li><a class="tile" href="record.html?id=${r.id}">
+    <div class="sleeve">${r.cover ? `<img src="${esc(r.cover)}" alt="" loading="lazy">` : `<span>${esc(r.title)}</span>`}</div>
+    <b>${esc(r.title)}</b><small>${esc(r.artist)}${r.year ? ", " + r.year : ""}</small></a></li>`).join("");
+}
+const qp = new URLSearchParams(location.search).get("q"); if (qp) $("q").value = qp;
+$("q").oninput = render; $("sort").onchange = render; render();
+</script>
+</body></html>
