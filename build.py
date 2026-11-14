@@ -100,6 +100,7 @@ def main():
             "label": ", ".join(l["name"] for l in b.get("labels", [])[:2]),
             "catno": (b.get("labels") or [{}])[0].get("catno", ""),
             "format": ", ".join([fmt.get("name", "")] + fmt.get("descriptions", [])).strip(", "),
+            "colour": fmt.get("text", ""),
             "genres": b.get("genres", []),
             "styles": b.get("styles", []),
             "added": r.get("date_added", "")[:10],
